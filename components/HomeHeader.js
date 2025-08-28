@@ -29,7 +29,7 @@ export default function HomeHeader() {
         <>
             <View style={{ paddingTop: android ? top + 20 : top }} className="flex-row justify-between items-center px-5 bg-telegram-primary pb-4 shadow-sm">
                 <View>
-                    <Text className="text-white font-medium text-xl tracking-wide">QrChat</Text>
+                    <Text className="text-white font-medium text-xl tracking-wide">QTalk</Text>
                 </View>
 
                 <View>

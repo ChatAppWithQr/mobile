@@ -1,8 +1,8 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React, { useRef, useState } from 'react';
-import { Alert, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { Alert, Dimensions, Modal, Platform, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
 import { useAuth } from '../context/authContext';
 import { blurhash } from '../utils/common';
 import Loading from './Loading';
@@ -16,6 +16,19 @@ export default function Profile({ visible, onClose }) {
     const profileUrlRef = useRef(user?.profileUrl || "");
     const passwordRef = useRef("");
     const confirmPasswordRef = useRef("");
+
+    // Responsive dimensions
+    const screenHeight = Dimensions.get('window').height;
+    const screenWidth = Dimensions.get('window').width;
+    const isSmallScreen = screenHeight < 700;
+    const isNarrowScreen = screenWidth < 350;
+    
+    // Dynamic sizing based on screen size
+    const headerHeight = isSmallScreen ? hp(8) : hp(10);
+    const profileImageSize = isSmallScreen ? hp(12) : isNarrowScreen ? hp(10) : hp(15);
+    const inputHeight = isSmallScreen ? hp(6) : hp(6);
+    const fontSize = isSmallScreen ? hp(1.6) : hp(1.9);
+    const paddingHorizontal = isNarrowScreen ? wp(4) : wp(6);
 
     const handleSave = async () => {
         if (!usernameRef.current.trim()) {
@@ -78,51 +91,104 @@ export default function Profile({ visible, onClose }) {
             onRequestClose={onClose}
         >
             <View className="flex-1 bg-telegram-lighter">
+                <StatusBar barStyle="light-content" backgroundColor="#0088CC" />
+                
                 {/* Header */}
                 <View 
                     style={{ 
-                        paddingTop: hp(6.5),
+                        paddingTop: Platform.OS === 'ios' ? hp(6.5) : hp(4),
                         paddingBottom: hp(1.5),
-                        backgroundColor: '#0088CC'
+                        backgroundColor: '#0088CC',
+                        minHeight: headerHeight,
+                        paddingHorizontal
                     }}
-                    className="px-4"
+                    className="justify-end"
                 >
                     <View className="flex-row justify-between items-center">
-                        <TouchableOpacity onPress={onClose} className="p-1">
-                            <Ionicons name="close" size={hp(3)} color="white" />
+                        <TouchableOpacity 
+                            onPress={onClose} 
+                            className="p-2"
+                            style={{ minWidth: wp(10), minHeight: wp(10) }}
+                        >
+                            <Ionicons name="close" size={isSmallScreen ? hp(2.5) : hp(3)} color="white" />
                         </TouchableOpacity>
                         
-                        <Text className="text-white font-medium text-lg">Profile</Text>
+                        <Text 
+                            className="text-white font-medium text-center flex-1"
+                            style={{ fontSize: isSmallScreen ? hp(2) : hp(2.2) }}
+                        >
+                            Profile
+                        </Text>
                         
                         {editMode ? (
-                            <View className="flex-row gap-3">
-                                <TouchableOpacity onPress={handleCancel} className="p-1">
-                                    <Text className="text-white font-medium">Cancel</Text>
+                            <View className="flex-row items-center" style={{ minWidth: wp(20) }}>
+                                <TouchableOpacity 
+                                    onPress={handleCancel} 
+                                    className="p-2 mr-2"
+                                    style={{ minHeight: wp(10) }}
+                                >
+                                    <Text 
+                                        className="text-white font-medium"
+                                        style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                    >
+                                        Cancel
+                                    </Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={handleSave} className="p-1">
-                                    <Text className="text-white font-medium">Save</Text>
+                                <TouchableOpacity 
+                                    onPress={handleSave} 
+                                    className="p-2"
+                                    style={{ minHeight: wp(10) }}
+                                >
+                                    <Text 
+                                        className="text-white font-medium"
+                                        style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                    >
+                                        Save
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
-                            <TouchableOpacity onPress={() => setEditMode(true)} className="p-1">
-                                <Feather name="edit-3" size={hp(2.5)} color="white" />
+                            <TouchableOpacity 
+                                onPress={() => setEditMode(true)} 
+                                className="p-2"
+                                style={{ minWidth: wp(10), minHeight: wp(10) }}
+                            >
+                                <Feather 
+                                    name="edit-3" 
+                                    size={isSmallScreen ? hp(2) : hp(2.5)} 
+                                    color="white" 
+                                />
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
 
-                {/* Content */}
-                <View className="flex-1 px-6 py-6">
+                {/* Scrollable Content */}
+                <ScrollView 
+                    className="flex-1" 
+                    style={{ paddingHorizontal }}
+                    contentContainerStyle={{ 
+                        paddingVertical: isSmallScreen ? hp(3) : hp(4),
+                        paddingBottom: hp(10) // Extra bottom padding for keyboard
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Profile Picture */}
-                    <View className="items-center mb-8">
+                    <View className="items-center" style={{ marginBottom: isSmallScreen ? hp(4) : hp(6) }}>
                         <View 
                             style={{
-                                width: hp(15),
-                                height: hp(15),
-                                borderRadius: hp(7.5),
+                                width: profileImageSize,
+                                height: profileImageSize,
+                                borderRadius: profileImageSize / 2,
                                 backgroundColor: 'rgba(0, 136, 204, 0.1)',
                                 overflow: 'hidden',
-                                marginBottom: hp(2)
+                                marginBottom: hp(2),
+                                elevation: 3,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 4,
                             }}
                         >
                             <Image
@@ -139,31 +205,47 @@ export default function Profile({ visible, onClose }) {
                         
                         {editMode && (
                             <TouchableOpacity 
-                                className="bg-telegram-primary px-4 py-2 rounded-full"
+                                className="bg-telegram-primary rounded-full"
+                                style={{ 
+                                    paddingHorizontal: wp(6), 
+                                    paddingVertical: hp(1),
+                                    minHeight: hp(4.5)
+                                }}
                                 onPress={() => Alert.alert('Feature Coming Soon', 'Image picker functionality will be added')}
                             >
-                                <Text className="text-white font-medium">Change Photo</Text>
+                                <Text 
+                                    className="text-white font-medium text-center"
+                                    style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                >
+                                    Change Photo
+                                </Text>
                             </TouchableOpacity>
                         )}
                     </View>
 
                     {/* Profile Fields */}
-                    <View className="gap-6">
+                    <View style={{ gap: isSmallScreen ? hp(3) : hp(4) }}>
                         {/* Username */}
                         <View>
-                            <Text className="text-telegram-textLight mb-2 font-medium">Username</Text>
+                            <Text 
+                                className="text-telegram-textLight mb-2 font-medium"
+                                style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                            >
+                                Username
+                            </Text>
                             {editMode ? (
                                 <TextInput
                                     defaultValue={user?.username}
                                     onChangeText={value => usernameRef.current = value}
                                     style={{ 
-                                        height: hp(6),
-                                        fontSize: hp(1.9),
+                                        height: inputHeight,
+                                        fontSize,
                                         borderRadius: 12,
-                                        paddingHorizontal: 16,
+                                        paddingHorizontal: wp(4),
                                         backgroundColor: '#F8F9FA',
                                         borderWidth: 1,
-                                        borderColor: '#E9ECEF'
+                                        borderColor: '#E9ECEF',
+                                        textAlignVertical: 'center'
                                     }}
                                     className="text-telegram-text"
                                     placeholder="Enter username"
@@ -171,14 +253,14 @@ export default function Profile({ visible, onClose }) {
                             ) : (
                                 <View 
                                     style={{ 
-                                        height: hp(6),
+                                        height: inputHeight,
                                         justifyContent: 'center',
-                                        paddingHorizontal: 16,
+                                        paddingHorizontal: wp(4),
                                         backgroundColor: '#F8F9FA',
                                         borderRadius: 12
                                     }}
                                 >
-                                    <Text style={{ fontSize: hp(1.9) }} className="text-telegram-text">
+                                    <Text style={{ fontSize }} className="text-telegram-text">
                                         {user?.username || 'Not set'}
                                     </Text>
                                 </View>
@@ -187,17 +269,22 @@ export default function Profile({ visible, onClose }) {
 
                         {/* Email */}
                         <View>
-                            <Text className="text-telegram-textLight mb-2 font-medium">Email</Text>
+                            <Text 
+                                className="text-telegram-textLight mb-2 font-medium"
+                                style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                            >
+                                Email
+                            </Text>
                             <View 
                                 style={{ 
-                                    height: hp(6),
+                                    height: inputHeight,
                                     justifyContent: 'center',
-                                    paddingHorizontal: 16,
+                                    paddingHorizontal: wp(4),
                                     backgroundColor: '#F8F9FA',
                                     borderRadius: 12
                                 }}
                             >
-                                <Text style={{ fontSize: hp(1.9) }} className="text-telegram-textLight">
+                                <Text style={{ fontSize }} className="text-telegram-textLight">
                                     {user?.email || 'Not available'}
                                 </Text>
                             </View>
@@ -206,18 +293,24 @@ export default function Profile({ visible, onClose }) {
                         {/* Profile URL */}
                         {editMode && (
                             <View>
-                                <Text className="text-telegram-textLight mb-2 font-medium">Profile Picture URL</Text>
+                                <Text 
+                                    className="text-telegram-textLight mb-2 font-medium"
+                                    style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                >
+                                    Profile Picture URL
+                                </Text>
                                 <TextInput
                                     defaultValue={user?.profileUrl}
                                     onChangeText={value => profileUrlRef.current = value}
                                     style={{ 
-                                        height: hp(6),
-                                        fontSize: hp(1.9),
+                                        height: inputHeight,
+                                        fontSize,
                                         borderRadius: 12,
-                                        paddingHorizontal: 16,
+                                        paddingHorizontal: wp(4),
                                         backgroundColor: '#F8F9FA',
                                         borderWidth: 1,
-                                        borderColor: '#E9ECEF'
+                                        borderColor: '#E9ECEF',
+                                        textAlignVertical: 'center'
                                     }}
                                     className="text-telegram-text"
                                     placeholder="Enter image URL"
@@ -230,17 +323,23 @@ export default function Profile({ visible, onClose }) {
                         {editMode && (
                             <>
                                 <View>
-                                    <Text className="text-telegram-textLight mb-2 font-medium">New Password (Optional)</Text>
+                                    <Text 
+                                        className="text-telegram-textLight mb-2 font-medium"
+                                        style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                    >
+                                        New Password (Optional)
+                                    </Text>
                                     <TextInput
                                         onChangeText={value => passwordRef.current = value}
                                         style={{ 
-                                            height: hp(6),
-                                            fontSize: hp(1.9),
+                                            height: inputHeight,
+                                            fontSize,
                                             borderRadius: 12,
-                                            paddingHorizontal: 16,
+                                            paddingHorizontal: wp(4),
                                             backgroundColor: '#F8F9FA',
                                             borderWidth: 1,
-                                            borderColor: '#E9ECEF'
+                                            borderColor: '#E9ECEF',
+                                            textAlignVertical: 'center'
                                         }}
                                         className="text-telegram-text"
                                         placeholder="Enter new password"
@@ -249,17 +348,23 @@ export default function Profile({ visible, onClose }) {
                                 </View>
 
                                 <View>
-                                    <Text className="text-telegram-textLight mb-2 font-medium">Confirm New Password</Text>
+                                    <Text 
+                                        className="text-telegram-textLight mb-2 font-medium"
+                                        style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                                    >
+                                        Confirm New Password
+                                    </Text>
                                     <TextInput
                                         onChangeText={value => confirmPasswordRef.current = value}
                                         style={{ 
-                                            height: hp(6),
-                                            fontSize: hp(1.9),
+                                            height: inputHeight,
+                                            fontSize,
                                             borderRadius: 12,
-                                            paddingHorizontal: 16,
+                                            paddingHorizontal: wp(4),
                                             backgroundColor: '#F8F9FA',
                                             borderWidth: 1,
-                                            borderColor: '#E9ECEF'
+                                            borderColor: '#E9ECEF',
+                                            textAlignVertical: 'center'
                                         }}
                                         className="text-telegram-text"
                                         placeholder="Confirm new password"
@@ -272,19 +377,36 @@ export default function Profile({ visible, onClose }) {
 
                     {/* User Info */}
                     {!editMode && (
-                        <View className="mt-8 pt-6 border-t border-telegram-separator">
-                            <Text className="text-telegram-textLight mb-4 font-medium">Account Information</Text>
-                            <View className="gap-3">
-                                <Text className="text-telegram-textLight text-sm">
+                        <View 
+                            className="border-t border-telegram-separator"
+                            style={{ 
+                                marginTop: isSmallScreen ? hp(4) : hp(6), 
+                                paddingTop: isSmallScreen ? hp(3) : hp(4) 
+                            }}
+                        >
+                            {/* <Text 
+                                className="text-telegram-textLight mb-4 font-medium"
+                                style={{ fontSize: isSmallScreen ? hp(1.6) : hp(1.8) }}
+                            >
+                                Account Information
+                            </Text> */}
+                            {/* <View style={{ gap: hp(1.5) }}>
+                                <Text 
+                                    className="text-telegram-textLight"
+                                    style={{ fontSize: isSmallScreen ? hp(1.4) : hp(1.6) }}
+                                >
                                     User ID: {user?.userId || user?.uid || 'Unknown'}
                                 </Text>
-                                <Text className="text-telegram-textLight text-sm">
+                                <Text 
+                                    className="text-telegram-textLight"
+                                    style={{ fontSize: isSmallScreen ? hp(1.4) : hp(1.6) }}
+                                >
                                     Member since: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
                                 </Text>
-                            </View>
+                            </View> */}
                         </View>
                     )}
-                </View>
+                </ScrollView>
 
                 {/* Loading Overlay */}
                 {loading && (
@@ -301,7 +423,7 @@ export default function Profile({ visible, onClose }) {
                             zIndex: 999
                         }}
                     >
-                        <Loading size={hp(8)} />
+                        <Loading size={isSmallScreen ? hp(6) : hp(8)} />
                     </View>
                 )}
             </View>
